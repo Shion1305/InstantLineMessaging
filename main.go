@@ -23,24 +23,83 @@ func loadConfig() []LineInstance {
 	return instances
 }
 
-func createMessage(last int, image string) *linebot.BubbleContainer {
+func createRankingComponent(data RankingData, color string) linebot.FlexComponent {
+	return &linebot.BoxComponent{
+		Layout: linebot.FlexBoxLayoutTypeHorizontal,
+		Contents: []linebot.FlexComponent{
+			&linebot.BoxComponent{Layout: linebot.FlexBoxLayoutTypeVertical,
+				Contents: []linebot.FlexComponent{
+					&linebot.TextComponent{
+						Text:    data.vote,
+						Color:   "#ffffff",
+						Align:   linebot.FlexComponentAlignTypeCenter,
+						Gravity: linebot.FlexComponentGravityTypeCenter,
+					},
+				},
+				CornerRadius:    linebot.FlexComponentCornerRadiusTypeMd,
+				BackgroundColor: color,
+				JustifyContent:  linebot.FlexComponentJustifyContentTypeCenter,
+			},
+			&linebot.ImageComponent{
+				URL:         "https://gakumado.mynavi.jp" + data.image,
+				Size:        linebot.FlexImageSizeTypeXxs,
+				Align:       linebot.FlexComponentAlignTypeCenter,
+				AspectRatio: linebot.FlexImageAspectRatioType1to1,
+				AspectMode:  linebot.FlexImageAspectModeTypeCover,
+			},
+			&linebot.TextComponent{Text: data.name,
+				Gravity: linebot.FlexComponentGravityTypeCenter},
+		},
+	}
+}
+
+func createMessage(last int, image string, ranks []RankingData) *linebot.BubbleContainer {
+	var rankingList []linebot.FlexComponent
+
+	for i, r := range ranks {
+		var color string
+		switch i {
+		case 0:
+			color = "#e3c644"
+			break
+		case 1:
+			color = "#a3a39d"
+			break
+		case 2:
+			color = "#8f590d"
+			break
+		case 3:
+			color = "#45a7ed"
+			break
+		case 4:
+			color = "#38f2a8"
+			break
+		}
+		rankingList = append(rankingList, createRankingComponent(r, color))
+	}
+
 	fmt.Println(last)
 	if image == "" {
 		image = "https://i.postimg.cc/fyD6NZDf/190-20220331210838.png"
 	}
 	return &linebot.BubbleContainer{
 		Type: linebot.FlexContainerTypeBubble,
-		Hero: &linebot.ImageComponent{
-			URL:         image,
-			Size:        linebot.FlexImageSizeTypeFull,
-			AspectRatio: "20:13",
-			Margin:      linebot.FlexComponentMarginTypeSm,
-			AspectMode:  linebot.FlexImageAspectModeTypeFit,
-		},
 		Body: &linebot.BoxComponent{
 			Type:   linebot.FlexComponentTypeBox,
 			Layout: linebot.FlexBoxLayoutTypeVertical,
 			Contents: []linebot.FlexComponent{
+				&linebot.TextComponent{Text: "ただいまの状況", Size: linebot.FlexTextSizeTypeLg, Weight: linebot.FlexTextWeightTypeBold, Align: linebot.FlexComponentAlignTypeCenter},
+				&linebot.BoxComponent{
+					Layout:   linebot.FlexBoxLayoutTypeVertical,
+					Contents: rankingList,
+				},
+				&linebot.ImageComponent{
+					URL:         image,
+					Size:        linebot.FlexImageSizeTypeFull,
+					AspectRatio: "20:13",
+					Margin:      linebot.FlexComponentMarginTypeSm,
+					AspectMode:  linebot.FlexImageAspectModeTypeFit,
+				},
 				&linebot.TextComponent{
 					Text:   "投票お願いもめ❤️",
 					Weight: linebot.FlexTextWeightTypeBold,
@@ -53,6 +112,11 @@ func createMessage(last int, image string) *linebot.BubbleContainer {
 					Align:  linebot.FlexComponentAlignTypeCenter,
 					Weight: linebot.FlexTextWeightTypeRegular,
 					Margin: linebot.FlexComponentMarginTypeXl,
+				},
+				&linebot.TextComponent{
+					Text:  "10/31まで",
+					Size:  linebot.FlexTextSizeTypeXxs,
+					Align: linebot.FlexComponentAlignTypeCenter,
 				},
 			},
 		},
@@ -68,14 +132,14 @@ func createMessage(last int, image string) *linebot.BubbleContainer {
 	}
 }
 
-func executeSend(last int, image string) {
+func executeSend(last int, rankingData []RankingData) {
 	instances := loadConfig()
 	for _, instance := range instances {
 		client, err := linebot.New(instance.Secret, instance.Token)
 		if err != nil {
 			fmt.Print("Error1: ", instance.Name, err)
 		}
-		message := linebot.NewFlexMessage("投票してもめ～", createMessage(last, randomImage()))
+		message := linebot.NewFlexMessage("投票してもめ～", createMessage(last, randomImage(), rankingData))
 		if _, err := client.BroadcastMessage(message).Do(); err != nil {
 			fmt.Println("Error2: ", instance.Name, err)
 		}
@@ -117,11 +181,13 @@ func randomImage() string {
 }
 
 func main() {
-	const format = "2006-01-02 15:04:05"
-	limit, _ := time.Parse(format, "2022-10-31 23:00:00")
+	ranking := getData()
+	fmt.Println(ranking)
+	const format = "2006-01-02 15:04:05 (MST)"
+	limit, _ := time.Parse(format, "2022-10-31 23:00:00 (JST)")
 	sub := limit.Sub(time.Now())
 	remaining := int(sub.Hours()/24 + 1)
 	if remaining > 0 {
-		executeSend(remaining, "")
+		executeSend(remaining, ranking)
 	}
 }
