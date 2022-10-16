@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 )
@@ -17,9 +17,15 @@ type LineInstance struct {
 }
 
 func loadConfig() []LineInstance {
-	configFile, _ := ioutil.ReadFile("bot-configuration.json")
+	configFile, err := os.ReadFile("./bot-configuration.json")
+	if err != nil {
+		fmt.Println("Error loading config")
+	}
 	var instances []LineInstance
-	_ = json.Unmarshal(configFile, &instances)
+	err = json.Unmarshal(configFile, &instances)
+	if err != nil {
+		fmt.Println("Error on unmarshal")
+	}
 	return instances
 }
 
