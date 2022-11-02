@@ -16,8 +16,8 @@ type LineInstance struct {
 	Secret string `json:"LineSecret"`
 }
 
-func loadConfig() []LineInstance {
-	configFile, err := os.ReadFile("/home/shion/InstantLineMessaging/bot-configuration.json")
+func loadConfig(file string) []LineInstance {
+	configFile, err := os.ReadFile(file)
 	if err != nil {
 		fmt.Println("Error loading config")
 	}
@@ -138,8 +138,8 @@ func createMessage(last int, image string, ranks []RankingData) *linebot.BubbleC
 	}
 }
 
-func executeSend(last int, rankingData []RankingData) {
-	instances := loadConfig()
+func executeSend(configFile string, last int, rankingData []RankingData) {
+	instances := loadConfig(configFile)
 	for _, instance := range instances {
 		client, err := linebot.New(instance.Secret, instance.Token)
 		if err != nil {
@@ -186,19 +186,19 @@ func randomImage() string {
 	return images[rand.Int()%len(images)]
 }
 
-func sendKamomeReminder() {
+func sendKamomeReminder(configFile string) {
 	ranking := getData()
 	const format = "2006-01-02 15:04:05 (MST)"
 	limit, _ := time.Parse(format, "2022-11-07 23:00:00 (JST)")
 	sub := limit.Sub(time.Now())
 	remaining := int(sub.Hours()/24 + 1)
 	if remaining > 0 {
-		executeSend(remaining, ranking)
+		executeSend(configFile, remaining, ranking)
 	}
 }
 
-func sendSimpleTextMessage(msg string) {
-	instances := loadConfig()
+func sendSimpleTextMessage(configFile string, msg string) {
+	instances := loadConfig(configFile)
 	for _, instance := range instances {
 		client, err := linebot.New(instance.Secret, instance.Token)
 		if err != nil {
@@ -212,5 +212,5 @@ func sendSimpleTextMessage(msg string) {
 }
 
 func main() {
-	sendKamomeReminder()
+	sendKamomeReminder(os.Args[1])
 }
