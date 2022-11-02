@@ -17,7 +17,7 @@ type LineInstance struct {
 }
 
 func loadConfig() []LineInstance {
-	configFile, err := os.ReadFile("./bot-configuration.json")
+	configFile, err := os.ReadFile("/home/shion/InstantLineMessaging/bot-configuration.json")
 	if err != nil {
 		fmt.Println("Error loading config")
 	}
@@ -120,7 +120,7 @@ func createMessage(last int, image string, ranks []RankingData) *linebot.BubbleC
 					Margin: linebot.FlexComponentMarginTypeXl,
 				},
 				&linebot.TextComponent{
-					Text:  "10/31まで",
+					Text:  "11/07まで",
 					Size:  linebot.FlexTextSizeTypeXxs,
 					Align: linebot.FlexComponentAlignTypeCenter,
 				},
@@ -190,7 +190,7 @@ func main() {
 	ranking := getData()
 	fmt.Println(ranking)
 	const format = "2006-01-02 15:04:05 (MST)"
-	limit, _ := time.Parse(format, "2022-10-31 23:00:00 (JST)")
+	limit, _ := time.Parse(format, "2022-11-07 23:00:00 (JST)")
 	sub := limit.Sub(time.Now())
 	remaining := int(sub.Hours()/24 + 1)
 	if remaining > 0 {
