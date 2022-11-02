@@ -186,9 +186,8 @@ func randomImage() string {
 	return images[rand.Int()%len(images)]
 }
 
-func main() {
+func sendKamomeReminder() {
 	ranking := getData()
-	fmt.Println(ranking)
 	const format = "2006-01-02 15:04:05 (MST)"
 	limit, _ := time.Parse(format, "2022-11-07 23:00:00 (JST)")
 	sub := limit.Sub(time.Now())
@@ -196,4 +195,22 @@ func main() {
 	if remaining > 0 {
 		executeSend(remaining, ranking)
 	}
+}
+
+func sendSimpleTextMessage(msg string) {
+	instances := loadConfig()
+	for _, instance := range instances {
+		client, err := linebot.New(instance.Secret, instance.Token)
+		if err != nil {
+			fmt.Print("Error1: ", instance.Name, err)
+		}
+		message := linebot.NewTextMessage(msg)
+		if _, err := client.BroadcastMessage(message).Do(); err != nil {
+			fmt.Println("Error2: ", instance.Name, err)
+		}
+	}
+}
+
+func main() {
+	sendKamomeReminder()
 }
